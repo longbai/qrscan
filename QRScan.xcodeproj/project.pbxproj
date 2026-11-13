@@ -1,0 +1,164 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXFileReference section */
+		A10000000000000000000001 /* QRScan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QRScan.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1000000000000000000000F /* QRScanTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = QRScanTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		A10000000000000000000002 /* QRScan */ = {isa = PBXFileSystemSynchronizedRootGroup; path = QRScan; sourceTree = "<group>"; };
+		A10000000000000000000010 /* QRScanTests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = QRScanTests; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXGroup section */
+		A10000000000000000000003 = {
+			isa = PBXGroup;
+			children = (A10000000000000000000002 /* QRScan */, A10000000000000000000010 /* QRScanTests */, A10000000000000000000004 /* Products */);
+			sourceTree = "<group>";
+		};
+		A10000000000000000000004 /* Products */ = {
+			isa = PBXGroup;
+			children = (A10000000000000000000001 /* QRScan.app */, A1000000000000000000000F /* QRScanTests.xctest */);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A10000000000000000000005 /* QRScan */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A10000000000000000000008 /* Target configuration list */;
+			buildPhases = (A10000000000000000000006 /* Sources */, A10000000000000000000007 /* Resources */);
+			buildRules = ();
+			dependencies = ();
+			fileSystemSynchronizedGroups = (A10000000000000000000002 /* QRScan */);
+			name = QRScan;
+			productName = QRScan;
+			productReference = A10000000000000000000001 /* QRScan.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A10000000000000000000011 /* QRScanTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A10000000000000000000013 /* Test configurations */;
+			buildPhases = (A10000000000000000000012 /* Test sources */);
+			buildRules = ();
+			dependencies = (A10000000000000000000016 /* QRScan dependency */);
+			fileSystemSynchronizedGroups = (A10000000000000000000010 /* QRScanTests */);
+			name = QRScanTests;
+			productName = QRScanTests;
+			productReference = A1000000000000000000000F /* QRScanTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A10000000000000000000009 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {LastUpgradeCheck = 2720;};
+			buildConfigurationList = A1000000000000000000000A /* Project configuration list */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, "zh-Hans", Base);
+			mainGroup = A10000000000000000000003;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = A10000000000000000000004 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (A10000000000000000000005 /* QRScan */, A10000000000000000000011 /* QRScanTests */);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A10000000000000000000007 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A10000000000000000000006 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		A10000000000000000000012 /* Test sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A10000000000000000000016 /* QRScan dependency */ = {isa = PBXTargetDependency; target = A10000000000000000000005 /* QRScan */; };
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		A1000000000000000000000B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A1000000000000000000000C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		A1000000000000000000000D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = A10000000000000000000002 /* QRScan */;
+			baseConfigurationReferenceRelativePath = Build.xcconfig;
+			buildSettings = {};
+			name = Debug;
+		};
+		A1000000000000000000000E /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = A10000000000000000000002 /* QRScan */;
+			baseConfigurationReferenceRelativePath = Build.xcconfig;
+			buildSettings = {};
+			name = Release;
+		};
+		A10000000000000000000014 /* Debug tests */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = A10000000000000000000010 /* QRScanTests */;
+			baseConfigurationReferenceRelativePath = Tests.xcconfig;
+			buildSettings = {};
+			name = Debug;
+		};
+		A10000000000000000000015 /* Release tests */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = A10000000000000000000010 /* QRScanTests */;
+			baseConfigurationReferenceRelativePath = Tests.xcconfig;
+			buildSettings = {};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A10000000000000000000008 /* Target configuration list */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (A1000000000000000000000D /* Debug */, A1000000000000000000000E /* Release */);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1000000000000000000000A /* Project configuration list */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (A1000000000000000000000B /* Debug */, A1000000000000000000000C /* Release */);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A10000000000000000000013 /* Test configurations */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (A10000000000000000000014 /* Debug tests */, A10000000000000000000015 /* Release tests */);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A10000000000000000000009 /* Project object */;
+}
