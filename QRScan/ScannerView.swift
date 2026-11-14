@@ -10,6 +10,7 @@ struct ScannerView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var cameraAccess = CameraAccess.checking
     @State private var hasTorch = false
     @State private var isTorchOn = false
@@ -33,16 +34,17 @@ struct ScannerView: View {
     }
 
     var body: some View {
-        VStack(spacing: 20) {
+        let compactHeight = verticalSizeClass == .compact
+        return VStack(spacing: compactHeight ? 8 : 20) {
             header
             cameraViewport
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             footer
         }
         .padding(.horizontal, 20)
-        .padding(.top, 16)
-        .padding(.bottom, 12)
-        .frame(maxWidth: 580)
+        .padding(.top, compactHeight ? 4 : 16)
+        .padding(.bottom, compactHeight ? 4 : 12)
+        .frame(maxWidth: 760)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background {
             LinearGradient(
@@ -136,6 +138,10 @@ struct ScannerView: View {
                     guard !Task.isCancelled, singleCodeID == id, let code = cameraCodes.first else { return }
                     selectCode(code, viewport: size)
                 } catch {}
+            }
+            .onChange(of: size) { _, _ in
+                // Detection bounds belong to the previous viewfinder size.
+                resetCameraFocus()
             }
             .overlay(alignment: .topTrailing) {
                 if cameraAccess == .ready, hasTorch {

@@ -39,6 +39,7 @@ final class CameraController: UIViewController, AVCaptureMetadataOutputObjectsDe
     private var isTorchOn = false
     private var detections: [Detection] = []
     private var expiry: Task<Void, Never>?
+    private var previewBounds = CGRect.zero
     private var preview: PreviewView { view as! PreviewView }
 
     var onCodes: (([CameraCode]) -> Void)?
@@ -54,6 +55,11 @@ final class CameraController: UIViewController, AVCaptureMetadataOutputObjectsDe
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        if previewBounds != preview.bounds {
+            previewBounds = preview.bounds
+            expiry?.cancel()
+            detections.removeAll()
+        }
         updatePreviewRotation()
     }
 
@@ -76,11 +82,19 @@ final class CameraController: UIViewController, AVCaptureMetadataOutputObjectsDe
     }
 
     private func updatePreviewRotation() {
-        // The app uses a portrait interface on iPhone.
-        if let connection = preview.previewLayer.connection,
-           connection.isVideoRotationAngleSupported(90) {
-            connection.videoRotationAngle = 90
+        guard let connection = preview.previewLayer.connection else { return }
+        let angle: CGFloat
+        switch view.window?.windowScene?.effectiveGeometry.interfaceOrientation {
+        case .landscapeLeft: angle = 180
+        case .landscapeRight: angle = 0
+        case .portraitUpsideDown: angle = 270
+        default: angle = 90
         }
+        guard angle != connection.videoRotationAngle,
+              connection.isVideoRotationAngleSupported(angle) else { return }
+        expiry?.cancel()
+        detections.removeAll()
+        connection.videoRotationAngle = angle
     }
 
     func metadataOutput(
