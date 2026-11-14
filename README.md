@@ -1,6 +1,6 @@
 # QRScan
 
-[简体中文](README.zh-Hans.md) · [Download source for 1.0.2](https://github.com/longbai/qrscan/releases/tag/v1.0.2)
+[Download source for 1.0.2](https://github.com/longbai/qrscan/releases/tag/v1.0.2)
 
 QRScan is an iPhone QR code and barcode scanner for checking what a code contains before you open it. Scan with the camera or from a screenshot, inspect the destination domain, and copy the full link or an individual query value.
 
