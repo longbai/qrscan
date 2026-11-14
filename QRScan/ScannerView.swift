@@ -4,7 +4,7 @@ import SwiftUI
 
 struct ScannerView: View {
     private enum CameraAccess {
-        case checking, ready, denied, unavailable
+        case checking, ready, denied, unavailable, failed
     }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -19,18 +19,21 @@ struct ScannerView: View {
     @State private var focus: CGRect?
     @State private var cameraTransition: Task<Void, Never>?
     @State private var cameraCodes: [CameraCode] = []
+    @State private var viewedCameraPayloads: Set<String> = []
+    @State private var isCameraResultList = false
     @State private var results: ScanResults?
     @State private var photoError: String?
 
     private var shouldRunCamera: Bool {
-        scenePhase == .active && results == nil
+        scenePhase == .active && cameraAccess == .ready && results == nil
             && (focus == nil || cameraTransition != nil)
             && !isPickingPhoto && photo == nil && photoError == nil
     }
 
     private var singleCodeID: UUID? {
-        guard shouldRunCamera, focus == nil, cameraCodes.count == 1 else { return nil }
-        return cameraCodes.first?.id
+        guard shouldRunCamera, focus == nil else { return nil }
+        let eligible = cameraCodes.filter { !viewedCameraPayloads.contains($0.payload) }
+        return eligible.count == 1 ? eligible.first?.id : nil
     }
 
     var body: some View {
@@ -58,12 +61,20 @@ struct ScannerView: View {
         .task(id: scenePhase) {
             if scenePhase == .active { await checkCamera() }
         }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { resetCameraFocus() }
+        }
         .task(id: photo) {
             if let photo { await readPhoto(photo) }
         }
         .photosPicker(isPresented: $isPickingPhoto, selection: $photo, matching: .images)
-        .sheet(item: $results, onDismiss: resetCameraFocus) { results in
-            ScanResultsView(results: results)
+        .sheet(item: $results, onDismiss: {
+            isCameraResultList = false
+            resetCameraFocus()
+        }) { results in
+            ScanResultsView(results: results, onSelect: { result in
+                if isCameraResultList { viewedCameraPayloads.insert(result.raw) }
+            })
         }
         .onChange(of: shouldRunCamera) { _, running in
             if !running { cameraCodes = [] }
@@ -113,11 +124,15 @@ struct ScannerView: View {
             ZStack {
                 Color.scanInk
                 if cameraAccess == .ready {
-                    CameraPreview(isScanning: shouldRunCamera, isTorchOn: isTorchOn) { codes in
-                        if shouldRunCamera, focus == nil { cameraCodes = codes }
+                    CameraPreview(isScanning: shouldRunCamera, isTorchOn: isTorchOn) { codes, settled in
+                        guard shouldRunCamera, focus == nil else { return }
+                        if settled {
+                            viewedCameraPayloads.formIntersection(codes.map(\.payload))
+                        }
+                        cameraCodes = codes
                     } onUnavailable: {
-                        cameraAccess = .unavailable
-                        cameraCodes = []
+                        cameraAccess = .failed
+                        resetCameraFocus()
                     }
                     .accessibilityHidden(true)
                     scannerOverlay(guide: guide, size: size)
@@ -135,7 +150,8 @@ struct ScannerView: View {
                 guard let id = singleCodeID else { return }
                 do {
                     try await Task.sleep(for: .milliseconds(450))
-                    guard !Task.isCancelled, singleCodeID == id, let code = cameraCodes.first else { return }
+                    guard !Task.isCancelled, singleCodeID == id,
+                          let code = cameraCodes.first(where: { $0.id == id }) else { return }
                     selectCode(code, viewport: size)
                 } catch {}
             }
@@ -146,6 +162,27 @@ struct ScannerView: View {
             .overlay(alignment: .topTrailing) {
                 if cameraAccess == .ready, hasTorch {
                     torchButton.padding(12)
+                }
+            }
+            .overlay(alignment: .bottomLeading) {
+                if shouldRunCamera, focus == nil, cameraCodes.count > 1 {
+                    Button {
+                        let sorted = cameraCodes.sorted {
+                            ($0.bounds.midY, $0.bounds.midX) < ($1.bounds.midY, $1.bounds.midX)
+                        }
+                        isCameraResultList = true
+                        results = ScanResults(items: sorted.map { code in
+                            ScanResult(code.payload, format: code.format)
+                        })
+                    } label: {
+                        Label("View \(cameraCodes.count) codes", systemImage: "list.bullet")
+                            .font(.subheadline.weight(.semibold))
+                            .padding(.horizontal, 14)
+                            .frame(minHeight: 44)
+                            .background(.black.opacity(0.8), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .padding(12)
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 28))
@@ -211,7 +248,7 @@ struct ScannerView: View {
             case .checking:
                 ProgressView("Starting camera")
                     .tint(.scanMint)
-            case .denied, .unavailable:
+            case .denied, .unavailable, .failed:
                 Image(systemName: "camera.fill")
                     .font(.title)
                     .foregroundStyle(Color.scanMint)
@@ -224,6 +261,10 @@ struct ScannerView: View {
                     .multilineTextAlignment(.center)
                 if cameraAccess == .denied, let settings = URL(string: UIApplication.openSettingsURLString) {
                     Button("Open Settings") { openURL(settings) }
+                        .buttonStyle(.bordered)
+                        .tint(.scanMint)
+                } else if cameraAccess == .failed {
+                    Button("Retry Camera") { Task { await checkCamera() } }
                         .buttonStyle(.bordered)
                         .tint(.scanMint)
                 }
@@ -265,7 +306,7 @@ struct ScannerView: View {
 
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
-            if cameraAccess != .unavailable { cameraAccess = .ready }
+            cameraAccess = .ready
         case .notDetermined:
             let granted = await AVCaptureDevice.requestAccess(for: .video)
             cameraAccess = granted ? .ready : .denied
@@ -320,7 +361,8 @@ struct ScannerView: View {
         cameraTransition = Task { @MainActor in
             do {
                 try await Task.sleep(for: .milliseconds(reduceMotion ? 80 : 340))
-                results = ScanResults([code.payload])
+                viewedCameraPayloads.insert(code.payload)
+                results = ScanResults(items: [ScanResult(code.payload, format: code.format)])
                 cameraTransition = nil
             } catch {
                 return
@@ -345,12 +387,12 @@ struct ScannerView: View {
             guard let data = try await item.loadTransferable(type: Data.self) else {
                 throw PhotoScanner.Failure.unreadableImage
             }
-            let payloads = try await PhotoScanner.scan(data)
+            let scan = try await PhotoScanner.scan(data)
             guard !Task.isCancelled, photo == item else { return }
-            if payloads.isEmpty {
+            if scan.items.isEmpty {
                 photoError = String(localized: "No QR code or barcode found in this image.")
             } else {
-                results = ScanResults(payloads)
+                results = scan
             }
         } catch {
             guard !Task.isCancelled, photo == item else { return }

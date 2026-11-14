@@ -23,6 +23,7 @@ final class ScanResultTests: XCTestCase {
         XCTAssertEqual(link.parameters.map(\.id), [0, 1, 2])
         XCTAssertEqual(link.parameters.map(\.name), ["tag", "tag", "tag"])
         XCTAssertEqual(link.parameters.map(\.value), ["first", "a+b", "a+b"])
+        XCTAssertEqual(link.parameters.map(\.encodedValue), ["first", "a%2Bb", "a+b"])
     }
 
     func testEmptyAndMissingParameterValuesAreDistinct() throws {
@@ -30,6 +31,16 @@ final class ScanResultTests: XCTestCase {
 
         XCTAssertEqual(link.parameters.map(\.name), ["empty", "flag", ""])
         XCTAssertEqual(link.parameters.map(\.value), ["", nil, "value"])
+        XCTAssertEqual(link.parameters.map(\.encodedValue), ["", nil, "value"])
+    }
+
+    func testOriginalParametersKeepLiteralCharactersAndEscapeCase() throws {
+        let link = try XCTUnwrap(ScanResult("https://example.com/?%6Eame=中%2f文&other=a=b#?ignored=1").link)
+
+        XCTAssertEqual(link.parameters.map(\.name), ["name", "other"])
+        XCTAssertEqual(link.parameters.map(\.value), ["中/文", "a=b"])
+        XCTAssertEqual(link.parameters.map(\.encodedName), ["%6Eame", "other"])
+        XCTAssertEqual(link.parameters.map(\.encodedValue), ["中%2f文", "a=b"])
     }
 
     func testBarcodeAndPlainTextRemainCopyableAsRawContent() {

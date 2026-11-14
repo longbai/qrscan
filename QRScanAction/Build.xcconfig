@@ -1,0 +1,13 @@
+#include "../QRScan/Build.xcconfig"
+
+APPLICATION_EXTENSION_API_ONLY = YES
+ASSETCATALOG_COMPILER_APPICON_NAME =
+INFOPLIST_FILE = QRScanAction/Info.plist
+INFOPLIST_KEY_CFBundleDisplayName = Scan with QRScan
+PRODUCT_BUNDLE_IDENTIFIER = x.loong.qrscan.action
+SKIP_INSTALL = YES
+INFOPLIST_KEY_NSCameraUsageDescription =
+INFOPLIST_KEY_UIApplicationSceneManifest_Generation = NO
+INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents =
+INFOPLIST_KEY_UILaunchScreen_Generation = NO
+INFOPLIST_KEY_UISupportedInterfaceOrientations =

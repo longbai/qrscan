@@ -41,3 +41,9 @@
 "Turn on flashlight" = "打开手电筒";
 "View scan result" = "查看识别结果";
 "You can copy the original link." = "你可以复制原始链接。";
+"Retry Camera" = "重试相机";
+"View %lld codes" = "查看 %lld 个码";
+"View code %lld" = "查看第 %lld 个码";
+"Parameter display" = "参数显示方式";
+"Decoded" = "解码值";
+"Original" = "原始值";

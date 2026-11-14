@@ -4,13 +4,14 @@ import SwiftUI
 struct CameraCode: Identifiable {
     let id: UUID
     let payload: String
+    let format: ScanFormat
     let bounds: CGRect
 }
 
 struct CameraPreview: UIViewControllerRepresentable {
     var isScanning: Bool
     var isTorchOn: Bool
-    var onCodes: ([CameraCode]) -> Void
+    var onCodes: ([CameraCode], Bool) -> Void
     var onUnavailable: () -> Void
 
     func makeUIViewController(context: Context) -> CameraController {
@@ -39,10 +40,12 @@ final class CameraController: UIViewController, AVCaptureMetadataOutputObjectsDe
     private var isTorchOn = false
     private var detections: [Detection] = []
     private var expiry: Task<Void, Never>?
+    private var runtimeErrorObserver: NSObjectProtocol?
+    private var firstDetectionTime: ContinuousClock.Instant?
     private var previewBounds = CGRect.zero
     private var preview: PreviewView { view as! PreviewView }
 
-    var onCodes: (([CameraCode]) -> Void)?
+    var onCodes: (([CameraCode], Bool) -> Void)?
     var onUnavailable: (() -> Void)?
 
     override func loadView() {
@@ -51,6 +54,18 @@ final class CameraController: UIViewController, AVCaptureMetadataOutputObjectsDe
         preview.previewLayer.videoGravity = .resizeAspectFill
         preview.previewLayer.session = camera.session
         view = preview
+        runtimeErrorObserver = NotificationCenter.default.addObserver(
+            forName: AVCaptureSession.runtimeErrorNotification, object: camera.session, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, self.isScanning else { return }
+                self.onUnavailable?()
+            }
+        }
+    }
+
+    deinit {
+        if let runtimeErrorObserver { NotificationCenter.default.removeObserver(runtimeErrorObserver) }
     }
 
     override func viewDidLayoutSubviews() {
@@ -58,6 +73,7 @@ final class CameraController: UIViewController, AVCaptureMetadataOutputObjectsDe
         if previewBounds != preview.bounds {
             previewBounds = preview.bounds
             expiry?.cancel()
+            expiry = nil
             detections.removeAll()
         }
         updatePreviewRotation()
@@ -65,17 +81,23 @@ final class CameraController: UIViewController, AVCaptureMetadataOutputObjectsDe
 
     func updateCamera(scanning enabled: Bool, torch: Bool) {
         guard isScanning != enabled || isTorchOn != torch else { return }
+        let starting = enabled && !isScanning
         isScanning = enabled
         isTorchOn = torch
         if !enabled {
+            firstDetectionTime = nil
             expiry?.cancel()
+            expiry = nil
             detections.removeAll()
         }
         camera.update(running: enabled, torch: torch, delegate: self) { [weak self] configured in
-            guard let self else { return }
+            guard let self, self.isScanning else { return }
             if configured {
                 self.updatePreviewRotation()
-            } else if self.isScanning {
+                if starting, self.detections.isEmpty, self.expiry == nil {
+                    self.scheduleExpiry(after: .milliseconds(700))
+                }
+            } else {
                 self.onUnavailable?()
             }
         }
@@ -93,6 +115,7 @@ final class CameraController: UIViewController, AVCaptureMetadataOutputObjectsDe
         guard angle != connection.videoRotationAngle,
               connection.isVideoRotationAngleSupported(angle) else { return }
         expiry?.cancel()
+        expiry = nil
         detections.removeAll()
         connection.videoRotationAngle = angle
     }
@@ -106,32 +129,39 @@ final class CameraController: UIViewController, AVCaptureMetadataOutputObjectsDe
 
         let now = ContinuousClock.now
         let lifetime = Duration.milliseconds(400)
+        if firstDetectionTime == nil { firstDetectionTime = now }
         var previous = detections.filter { $0.timestamp + lifetime > now }
         var current: [Detection] = []
 
         for case let code as AVMetadataMachineReadableCodeObject in metadataObjects {
             guard let payload = code.stringValue,
+                  let format = CameraSession.codeTypes[code.type],
                   let bounds = preview.previewLayer.transformedMetadataObject(for: code)?.bounds else { continue }
             let visible = bounds.intersection(preview.bounds)
             guard !visible.isEmpty else { continue }
 
             let match = previous.firstIndex {
-                $0.code.payload == payload && $0.code.bounds.intersects(visible)
+                $0.code.payload == payload && $0.code.format == format && $0.code.bounds.intersects(visible)
             }
             let id = match.map { previous.remove(at: $0).code.id } ?? UUID()
-            current.append(Detection(code: CameraCode(id: id, payload: payload, bounds: visible), timestamp: now))
+            current.append(Detection(code: CameraCode(id: id, payload: payload, format: format, bounds: visible), timestamp: now))
         }
 
         detections = current + previous
-        onCodes?(detections.map(\.code))
-        expiry?.cancel()
-        guard !detections.isEmpty else { return }
+        let settled = firstDetectionTime.map { now >= $0 + lifetime } ?? false
+        onCodes?(detections.map(\.code), settled)
         // Metadata callbacks can stop entirely when the last code leaves the frame.
+        scheduleExpiry(after: lifetime)
+    }
+
+    private func scheduleExpiry(after lifetime: Duration) {
+        expiry?.cancel()
         expiry = Task { [weak self] in
             do {
                 try await Task.sleep(for: lifetime)
+                self?.expiry = nil
                 self?.detections.removeAll()
-                self?.onCodes?([])
+                self?.onCodes?([], true)
             } catch {}
         }
     }
@@ -143,8 +173,9 @@ private final class PreviewView: UIView {
 }
 
 private final class CameraSession: @unchecked Sendable {
-    private static let codeTypes: [AVMetadataObject.ObjectType] = [
-        .qr, .ean13, .ean8, .upce, .code128, .code39, .code93, .itf14, .codabar
+    static let codeTypes: [AVMetadataObject.ObjectType: ScanFormat] = [
+        .qr: .qr, .ean13: .ean13, .ean8: .ean8, .upce: .upce, .code128: .code128,
+        .code39: .code39, .code93: .code93, .itf14: .itf14, .codabar: .codabar
     ]
 
     let session = AVCaptureSession()
@@ -207,7 +238,7 @@ private final class CameraSession: @unchecked Sendable {
 
         session.addOutput(output)
         let availableTypes = output.availableMetadataObjectTypes
-        let codeTypes = Self.codeTypes.filter { availableTypes.contains($0) }
+        let codeTypes = Self.codeTypes.keys.filter { availableTypes.contains($0) }
         guard !codeTypes.isEmpty else {
             session.removeOutput(output)
             session.removeInput(input)

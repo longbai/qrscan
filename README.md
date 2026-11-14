@@ -1,10 +1,17 @@
 # QRScan
 
-QRScan is an iPhone app for scanning QR codes and barcodes with the camera or from a photo. When a code contains a URL, you can inspect its domain, path, and query parameters, then copy the full link, copy an individual parameter value, or tap **Open Link**.
+[简体中文](README.zh-Hans.md) · [Download source for 1.0.2](https://github.com/longbai/qrscan/releases/tag/v1.0.2)
 
-- A single code in the camera view opens its result automatically. When several codes are visible, tap the arrow beside the one you want.
-- Use the flashlight in low light, or choose a saved image from Photos.
-- Recognition runs on the device. QRScan requires no account and is available in English and Simplified Chinese.
+QRScan is an iPhone QR code and barcode scanner for checking what a code contains before you open it. Scan with the camera or from a screenshot, inspect the destination domain, and copy the full link or an individual query value.
+
+## What’s new in 1.0.2
+
+- **Scan a screenshot from Photos.** Open its share menu and tap **Scan with QRScan** to inspect or copy results.
+- **Pick the right code.** Use the camera’s result list or tap a numbered marker on a photo. List entries show the link’s domain or the code format.
+- **Copy the exact parameter value.** Switch between decoded and original query parameters. For example, the original view preserves the difference between `a+b` and `a%2Bb`.
+- **Keep scanning.** Dismissing a result suppresses repeat pop-ups while the same code stays in view. Retry the camera from the scanner if it fails to start.
+
+Use the flashlight in low light. Recognition runs on your device and requires no account. The app is available in English and Simplified Chinese.
 
 ## Screenshots
 
