@@ -10,7 +10,7 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXVariantGroup section */
-		A10000000000000000000027 = {isa = PBXVariantGroup; children = (A10000000000000000000024); name = Localizable.strings; sourceTree = "<group>";};
+		A10000000000000000000027 = {isa = PBXVariantGroup; children = (A10000000000000000000024, A10000000000000000000037); name = Localizable.strings; sourceTree = "<group>";};
 /* End PBXVariantGroup section */
 
 /* Begin PBXBuildFile section */
@@ -33,6 +33,7 @@
 		A10000000000000000000022 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScan/PhotoScanner.swift; sourceTree = SOURCE_ROOT;};
 		A10000000000000000000023 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScan/ResultView.swift; sourceTree = SOURCE_ROOT;};
 		A10000000000000000000024 = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "QRScan/zh-Hans.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT;};
+		A10000000000000000000037 = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = "QRScan/ja.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT;};
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -100,7 +101,7 @@
 			buildConfigurationList = A1000000000000000000000A /* Project configuration list */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
-			knownRegions = (en, "zh-Hans", Base);
+			knownRegions = (en, "zh-Hans", ja, Base);
 			mainGroup = A10000000000000000000003;
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A10000000000000000000004 /* Products */;
@@ -153,14 +154,14 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReferenceAnchor = A10000000000000000000002 /* QRScan */;
 			baseConfigurationReferenceRelativePath = Build.xcconfig;
-			buildSettings = {};
+			buildSettings = {INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save generated QR codes to your photo library.";};
 			name = Debug;
 		};
 		A1000000000000000000000E /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReferenceAnchor = A10000000000000000000002 /* QRScan */;
 			baseConfigurationReferenceRelativePath = Build.xcconfig;
-			buildSettings = {};
+			buildSettings = {INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save generated QR codes to your photo library.";};
 			name = Release;
 		};
 		A10000000000000000000014 /* Debug tests */ = {

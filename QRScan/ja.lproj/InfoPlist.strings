@@ -1,0 +1,3 @@
+"CFBundleDisplayName" = "コードスキャナー";
+"NSCameraUsageDescription" = "QRコードとバーコードを読み取るためにカメラを使用します。";
+"NSPhotoLibraryAddUsageDescription" = "作成したQRコードを写真ライブラリに保存します。";

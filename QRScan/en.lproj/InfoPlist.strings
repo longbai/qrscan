@@ -1,2 +1,3 @@
 "CFBundleDisplayName" = "Code Scanner";
 "NSCameraUsageDescription" = "Use the camera to scan QR codes and barcodes.";
+"NSPhotoLibraryAddUsageDescription" = "Save generated QR codes to your photo library.";

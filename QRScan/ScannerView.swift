@@ -7,6 +7,11 @@ struct ScannerView: View {
         case checking, ready, denied, unavailable, failed
     }
 
+    private struct GeneratorRequest: Identifiable {
+        let id = UUID()
+        let initialText: String
+    }
+
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
@@ -23,11 +28,13 @@ struct ScannerView: View {
     @State private var isCameraResultList = false
     @State private var results: ScanResults?
     @State private var photoError: String?
+    @State private var generator: GeneratorRequest?
+    @State private var hasClipboardContent = false
 
     private var shouldRunCamera: Bool {
         scenePhase == .active && cameraAccess == .ready && results == nil
             && (focus == nil || cameraTransition != nil)
-            && !isPickingPhoto && photo == nil && photoError == nil
+            && !isPickingPhoto && photo == nil && photoError == nil && generator == nil
     }
 
     private var singleCodeID: UUID? {
@@ -59,7 +66,13 @@ struct ScannerView: View {
         }
         .preferredColorScheme(.dark)
         .task(id: scenePhase) {
-            if scenePhase == .active { await checkCamera() }
+            if scenePhase == .active {
+                refreshClipboardAvailability()
+                await checkCamera()
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIPasteboard.changedNotification)) { _ in
+            if scenePhase == .active { refreshClipboardAvailability() }
         }
         .onChange(of: scenePhase) { _, phase in
             if phase != .active { resetCameraFocus() }
@@ -75,6 +88,9 @@ struct ScannerView: View {
             ScanResultsView(results: results, onSelect: { result in
                 if isCameraResultList { viewedCameraPayloads.insert(result.raw) }
             })
+        }
+        .sheet(item: $generator, onDismiss: refreshClipboardAvailability) { request in
+            QRGeneratorView(initialText: request.initialText)
         }
         .onChange(of: shouldRunCamera) { _, running in
             if !running { cameraCodes = [] }
@@ -107,6 +123,21 @@ struct ScannerView: View {
                     .foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
+            Menu {
+                Button {
+                    openGenerator()
+                } label: {
+                    Label("Generate QR Code", systemImage: "qrcode")
+                }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.headline)
+                    .frame(width: 44, height: 44)
+                    .background(.white.opacity(0.08), in: Circle())
+            }
+            .tint(.scanMint)
+            .accessibilityLabel("More Tools")
+            .disabled(photo != nil)
         }
     }
 
@@ -275,6 +306,25 @@ struct ScannerView: View {
     }
 
     private var footer: some View {
+        VStack(spacing: 8) {
+            if hasClipboardContent {
+                HStack {
+                    Label("Generate from Clipboard", systemImage: "qrcode")
+                        .font(.subheadline.weight(.semibold))
+                    Spacer(minLength: 8)
+                    ClipboardPasteButton { openGenerator(initialText: $0) }
+                        .accessibilityLabel("Generate from Clipboard")
+                }
+                .padding(.leading, 12)
+                .padding(.trailing, 4)
+                .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
+                .disabled(photo != nil)
+            }
+            choosePhotoButton
+        }
+    }
+
+    private var choosePhotoButton: some View {
         Button {
             isPickingPhoto = true
         } label: {
@@ -294,6 +344,18 @@ struct ScannerView: View {
         .foregroundStyle(Color.scanInk)
         .background(Color.scanMint, in: RoundedRectangle(cornerRadius: 18))
         .disabled(photo != nil || focus != nil)
+    }
+
+    private func refreshClipboardAvailability() {
+        let pasteboard = UIPasteboard.general
+        hasClipboardContent = pasteboard.hasStrings || pasteboard.hasURLs
+    }
+
+    private func openGenerator(initialText: String = "") {
+        guard generator == nil, results == nil, photo == nil, photoError == nil, !isPickingPhoto else { return }
+        resetCameraFocus()
+        isTorchOn = false
+        generator = GeneratorRequest(initialText: initialText)
     }
 
     @MainActor

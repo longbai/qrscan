@@ -1,8 +1,14 @@
 # QRScan
 
-[Download source for 1.0.2](https://github.com/longbai/qrscan/releases/tag/v1.0.2)
+[Download source for 1.0.3](https://github.com/longbai/qrscan/releases/tag/v1.0.3)
 
-QRScan is an iPhone QR code and barcode scanner for checking what a code contains before you open it. Scan with the camera or from a screenshot, inspect the destination domain, and copy the full link or an individual query value.
+QRScan is an iPhone app for scanning QR codes and barcodes and creating QR codes. Scan with the camera or from a screenshot, inspect the destination domain, and copy the full link or an individual query value.
+
+## What’s new in 1.0.3
+
+- **Generate QR codes.** Open the scanner’s more menu to enter or paste text. When the clipboard contains text or a link, use the shortcut on the scanner to generate a code directly.
+- **Choose colors and error correction.** Set the foreground and background colors and choose error correction level L, M, Q, or H. The default is M.
+- **Save to Photos.** Save the QR code as a PNG or JPEG.
 
 ## What’s new in 1.0.2
 
@@ -11,7 +17,7 @@ QRScan is an iPhone QR code and barcode scanner for checking what a code contain
 - **Copy the exact parameter value.** Switch between decoded and original query parameters. For example, the original view preserves the difference between `a+b` and `a%2Bb`.
 - **Keep scanning.** Dismissing a result suppresses repeat pop-ups while the same code stays in view. Retry the camera from the scanner if it fails to start.
 
-Use the flashlight in low light. Recognition runs on your device and requires no account. The app is available in English and Simplified Chinese.
+Use the flashlight in low light. Scanning and generation run on your device and require no account. The app is available in English, Simplified Chinese, and Japanese.
 
 ## Screenshots
 
